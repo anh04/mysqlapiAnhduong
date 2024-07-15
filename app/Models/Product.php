@@ -22,7 +22,9 @@ class Product extends Model
         'prod_size_inch',
        // 'prd_tag',
         //'prd_similar',
-        'prod_attr'
+        'prod_attr',
+        'image_present',
+        'prd_suggest'
     ];
 
     protected $guarded = ['prd_short_disctiption',

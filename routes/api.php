@@ -40,9 +40,11 @@ Route::get('aothun/{prd_id}', [ProductController::class, 'aothun'])->name('produ
 
 Route::get('fashion', [ProductController::class, 'fashionID']);
 
+Route::get('suggested-list', [ProductController::class, 'suggestedList']);
+
+Route::post('product-search', [ProductController::class, 'productSearch']);
+
 Route::get('product-list', [ProductController::class, 'productList']);
-
-
 Route::get('product', [ProductController::class, 'productID']);
 Route::post('product', [ProductController::class, 'newOrUpdateProduct']);
 //Route::post('product/{prd_id}', [ProductController::class, 'updateproduct']);

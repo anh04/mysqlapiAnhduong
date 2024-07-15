@@ -77,11 +77,9 @@ class ProductController extends Controller
     {
         $id = $request->input('id');
         //print_r($id); die();
-        $product_detail = Product::select('products.*','product_types.prd_type_name')
-            ->leftJoin('product_types','product_types.prd_type_id','=','products.prd_type')->find($id);
-        //print_r($product_detail); die();
-        //return redirect('product')->with(['product'=>$product_detail]); //xem view redirect with data
-        //return view('products.product')->with(['product'=>$product_detail]);
+        $product_detail = Product::select('products.*','product_types.prd_type_name','product_types.prd_type_group')
+            ->leftJoin('product_types','product_types.prd_type_id','=','products.prd_type')
+            ->find($id)->toArray();
         return response()->json($product_detail);
 
     }
@@ -89,13 +87,27 @@ class ProductController extends Controller
     public function productID(Request $request)
     {
         $id = $request->input('id');
-        //print_r($id); die();
-        $product_detail = Product::select('products.*','product_types.prd_type_name')
-            ->leftJoin('product_types','product_types.prd_type_id','=','products.prd_type')->find($id);
+
+        $product_detail = Product::select('products.*','product_types.prd_type_name','product_types.prd_type_group')
+            ->leftJoin('product_types','product_types.prd_type_id','=','products.prd_type')->find($id)->toArray();
+
         return response()->json($product_detail);
 
     }
+    /**************************************/
+    public function productSearch(Request $request)
+    {
+        $prd_name = $request->input('prd_name');
 
+        $products = Product::select('products.prd_name','products.prd_id','product_types.prd_type_group',
+            'products.image_present')
+            ->leftJoin('product_types','product_types.prd_type_id','=','products.prd_type')
+            ->leftJoin('brands','brands.brand_id','=','product_types.prd_type_brand')
+            ->where('products.prd_name','like',$prd_name.'%')
+            ->orderBy('prd_id','asc')->get()->toArray();
+       
+        return response()->json($products);
+    }
     /**************************************/
     public function productList(Request $request)
     {
@@ -301,10 +313,7 @@ class ProductController extends Controller
             }else{
                 return response()->json(['message' => $data], 201);
             }
-
         }
-
-
         // Product::create($data);
 
     }
@@ -398,6 +407,38 @@ class ProductController extends Controller
     public function getProductType(){
         $product_type = ProductType::select('*')->get();
         return response()->json($product_type);
+    }
+
+    /***********************************/
+    public function suggestedList(Request $request){
+        $suggested = $request->input('suggested');
+        $in = explode(',',$suggested);
+        $products = Product::select('products.*','product_types.prd_type_name','product_types.prd_type_group',
+            'brands.brand_name')
+            ->leftJoin('product_types','product_types.prd_type_id','=','products.prd_type')
+            ->leftJoin('brands','brands.brand_id','=','product_types.prd_type_brand')
+            ->wherein('product_types.prd_type_group',$in)
+            ->where('products.prd_suggest','=','1')
+            ->orderBy('product_types.prd_type_group','asc')
+           // ->toSql();
+            ->get()
+            ->toArray();
+        $productAtt =array();
+        $shockProduct = array();
+        if(is_numeric(array_search('Fashion',$in))) $productAtt[]='userforfashion';
+        if(is_numeric(array_search('Laptop',$in))) $productAtt[]='accessory';
+        if(count($productAtt) > 0){
+            $shockProduct = Product::select('products.*','product_types.prd_type_name','product_types.prd_type_group',
+                'brands.brand_name')
+                ->leftJoin('product_types','product_types.prd_type_id','=','products.prd_type')
+                ->leftJoin('brands','brands.brand_id','=','product_types.prd_type_brand')
+                ->wherein('product_types.prd_type_group',$productAtt)
+                ->orderBy('product_types.prd_type_group','asc')
+                // ->toSql();
+                ->get()
+                ->toArray();
+        }
+        return response()->json(['products'=>$products,'shockProduct'=>$shockProduct]);
     }
 
     /*****************************************/
